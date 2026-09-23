@@ -17,9 +17,15 @@ python test_data.py
 
 程式下載官方季度及逐期檔案，保留台南 CSV 快取、依編號去重，原子替換網站資料。下載或格式檢查失敗時保留上次網站資料並回傳非零退出碼。不要刪除 cache，舊期資料退出官方近期清單後需由快取保留。
 
-## 公開與雲端更新（尚未啟用）
+## 公開與雲端更新（已啟用）
 
-已附 `.github/workflows/update-and-publish.yml`。需先將本專案（含 cache）放入使用者自己的 GitHub 儲存庫，在 Settings → Pages 將來源設為 GitHub Actions，然後手動執行一次工作流程。後續每天台灣時間 04:30 下載官方當期資料並發布。GitHub 的排程可能延遲；請在帳號通知設定開啟 Actions 失敗通知。公開儲存庫長時間無活動可能暫停排程，需留意 GitHub 通知。沒有建立任何遠端儲存庫，也沒有啟用雲端排程。
+正式網站：https://aston45gg.github.io/tainan-east-housing/
+
+專案：https://github.com/Aston45GG/tainan-east-housing
+
+GitHub Pages 與 GitHub Actions 已啟用。每日台灣時間約 04:30 下載官方當期資料、檢查並發布；排程可能延遲。可在 Actions 手動執行 Update official data and publish。首次執行已於 2026-09-23 成功通過。
+
+更新失敗會保留上次網站；請在 GitHub 通知設定開啟 Actions 失敗通知。
 
 公開內容限 public 資料夾。網站不含私人帳號或分析筆記。部署服務的用量、費用與規則以所選帳號方案為準。
 
