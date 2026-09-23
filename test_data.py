@@ -22,5 +22,25 @@ class DataChecks(unittest.TestCase):
             self.assertEqual(r['month'],r['date'][:7])
     def test_schema_guard(self):
         with self.assertRaises(ValueError): parse(b'<html>error</html>','test')
+    def test_presale_dataset(self):
+        p=Path(__file__).parent/'public/presale-data.json'
+        d=json.loads(p.read_text(encoding='utf-8'))
+        self.assertEqual(d['start'],'2026-04-01')
+        self.assertEqual(d['market'],'presale')
+        self.assertTrue(d['records'])
+        self.assertEqual(len(d['records']),len({r['id'] for r in d['records']}))
+        for r in d['records']:
+            self.assertGreaterEqual(r['date'],'2026-04-01')
+            self.assertFalse(r['termination'])
+            self.assertIsNone(r['age'])
+    def test_presale_boundary(self):
+        import csv,io
+        fields=['鄉鎮市區','交易年月日','編號','總價元','建物移轉總面積平方公尺','交易標的','建案名稱','棟及號','解約情形']
+        f=io.StringIO(); w=csv.DictWriter(f,fields); w.writeheader()
+        for day,serial,termination in [('1150331','before',''),('1150401','start',''),('1150402','cancel','已解約')]:
+            w.writerow(dict(zip(fields,['東區',day,serial,'10000000','100','房地(土地+建物)','測試建案','A1',termination])))
+        rows=parse(f.getvalue().encode('utf-8'),'test','presale')
+        self.assertEqual([r['id'] for r in rows],['start:','cancel:'])
+        self.assertEqual(rows[1]['termination'],'已解約')
 
 if __name__=='__main__': unittest.main()

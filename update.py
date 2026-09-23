@@ -29,15 +29,16 @@ def number(value):
     try: return float(value or 0)
     except (ValueError, TypeError): return 0
 
-def parse(blob, release):
+def parse(blob, release, market='sale'):
     reader = csv.DictReader(io.StringIO(blob.decode('utf-8-sig')))
     required = {'鄉鎮市區', '交易年月日', '編號', '總價元', '建物移轉總面積平方公尺'}
+    if market == 'presale': required |= {'建案名稱', '棟及號', '解約情形'}
     if not required.issubset(reader.fieldnames or []): raise ValueError('官方 CSV 欄位已變動，保留上次資料')
     rows = []
     for r in reader:
         if r['鄉鎮市區'] != '東區': continue
         dt = roc(r['交易年月日'])
-        if not dt or dt < START or dt > date.today(): continue
+        if not dt or dt < (date(2026, 4, 1) if market == 'presale' else START) or dt > date.today(): continue
         if '建物' not in r.get('交易標的', ''): continue
         area = number(r['建物移轉總面積平方公尺'])
         total = number(r['總價元'])
@@ -47,12 +48,12 @@ def parse(blob, release):
         has_park = '車位0' not in r.get('交易筆棟數', '') and ('車位' in r.get('交易筆棟數', ''))
         unit = number(r.get('單價元平方公尺'))
         # Official unit price is retained; do not guess parking allocation.
-        completed = roc(r.get('建築完成年月', ''))
+        completed = roc(r.get('建築完成年月', '')) if market == 'sale' else None
         age = round((dt - completed).days / 365.2425, 1) if completed and completed <= dt else None
         serial = r['編號'].strip()
         transfer = r.get('移轉編號', '').strip()
         ident = serial + ':' + transfer if serial else hashlib.sha256(json.dumps(r, sort_keys=True).encode()).hexdigest()
-        rows.append(dict(id=ident, date=dt.isoformat(), month=dt.strftime('%Y-%m'), address=r.get('土地位置建物門牌',''), type=r.get('建物型態','其他'), use=r.get('主要用途',''), floor=r.get('移轉層次',''), age=age, area=round(area/3.305785,2), total=round(total/10000,2), unit=round(unit*3.305785/10000,2) if unit>0 else None, parkingPrice=round(park_price/10000,2), parkingArea=round(park_area/3.305785,2), parkingUnclear=has_park and not (park_area>0 and park_price>0), note=r.get('備註',''), release=release))
+        rows.append(dict(id=ident, date=dt.isoformat(), month=dt.strftime('%Y-%m'), address=r.get('土地位置建物門牌',''), type=r.get('建物型態','其他'), use=r.get('主要用途',''), floor=r.get('移轉層次',''), age=age, area=round(area/3.305785,2), total=round(total/10000,2), unit=round(unit*3.305785/10000,2) if unit>0 else None, parkingPrice=round(park_price/10000,2), parkingArea=round(park_area/3.305785,2), parkingUnclear=has_park and not (park_area>0 and park_price>0), note=r.get('備註',''), release=release, project=r.get('建案名稱',''), unitName=r.get('棟及號',''), termination=r.get('解約情形','').strip()))
     return rows
 
 def archive(path, name):
@@ -100,5 +101,7 @@ def main():
     js.write_text('window.HOUSING_DATA='+json.dumps(result,ensure_ascii=False).replace('<','\\u003c')+';',encoding='utf-8')
     js.replace(PUBLIC/'data.js')
     print(json.dumps({'count':len(records),'latestRelease':current_release},ensure_ascii=False))
+    from update_presale import main as update_presale
+    update_presale()
 
 if __name__ == '__main__': main()
