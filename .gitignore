@@ -1,0 +1,6 @@
+__pycache__/
+*.tmp
+source-page.html
+active.html
+history.html
+sample.csv
