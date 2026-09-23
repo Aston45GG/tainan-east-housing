@@ -23,7 +23,7 @@ python test_data.py
 
 專案：https://github.com/Aston45GG/tainan-east-housing
 
-GitHub Pages 與 GitHub Actions 已啟用。每日台灣時間約 04:30 下載官方當期資料、檢查並發布；排程可能延遲。可在 Actions 手動執行 Update official data and publish。首次執行已於 2026-09-23 成功通過。
+GitHub Pages 與 GitHub Actions 已啟用。每月 1、11、21 日台灣時間約 12:30 下載官方當期資料、檢查並發布；排程可能延遲。可在 Actions 手動執行 Update official data and publish。首次執行已於 2026-09-23 成功通過。
 
 更新失敗會保留上次網站；請在 GitHub 通知設定開啟 Actions 失敗通知。
 
