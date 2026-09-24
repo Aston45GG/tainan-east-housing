@@ -6,7 +6,7 @@ const median=xs=>{xs=xs.filter(x=>Number.isFinite(x)).sort((a,b)=>a-b);return xs
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 let filtered=[],page=1;const perPage=20;
 function drawChart(){
- const months=[];let d=new Date((data.start || '2026-06-01')+'T00:00:00'),end=new Date();while(d<=end){months.push(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`);d.setMonth(d.getMonth()+1)}
+ const months=[];let d=new Date((data.start || '2026-01-01')+'T00:00:00'),end=new Date();while(d<=end){months.push(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`);d.setMonth(d.getMonth()+1)}
  const ms=$('month').value?months.filter(m=>m===$('month').value):months;
  const points=ms.map(m=>{const a=filtered.filter(r=>r.month===m);return {m,n:a.length,u:median(a.map(r=>r.unit))}});
  const max=Math.max(1,...points.map(x=>x.n)),maxU=Math.max(1,...points.map(x=>x.u||0))*1.2,W=1100,H=260,left=55,right=1030,base=210,step=(right-left)/Math.max(1,points.length);

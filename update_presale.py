@@ -1,7 +1,7 @@
-"""Import Tainan East presales from April 2026; keep these separate from sales."""
+"""Import Tainan East presales from January 2026; keep these separate from sales."""
 import io, json, re, zipfile
 from datetime import datetime, date
-from update import ROOT, BASE, PUBLIC, fetch, parse
+from update import ROOT, BASE, PUBLIC, START, fetch, parse
 
 CACHE = ROOT / 'cache' / 'presale'
 
@@ -20,9 +20,9 @@ def main():
     CACHE.mkdir(parents=True, exist_ok=True)
     history = fetch('DownloadHistory_ajax_list').decode('utf-8')
     releases = sorted(set(re.findall(r"downloadLast\('([0-9]{8})'\)", history)))
-    sources = [('115S2', archive('DownloadHistory?type=season&fileName=115S2', '115S2'))]
+    sources = [(period, archive('DownloadHistory?type=season&fileName='+period, period)) for period in ('115S1', '115S2')]
     for release in releases:
-        if release >= '20260401':
+        if release >= '20260101':
             print('Import presale', release, flush=True)
             sources.append((release, archive('DownloadHistory?type=history&fileName='+release, release)))
     known = {s[0] for s in sources}
@@ -39,7 +39,7 @@ def main():
         for row in parse(blob, period, 'presale'): records[row['id']] = row
     cancelled = [r for r in records.values() if r['termination']]
     active = [r for r in records.values() if not r['termination']]
-    result = dict(updatedAt=datetime.now().astimezone().isoformat(), market='presale', start='2026-04-01', latestRelease=release, source=BASE+'DownloadOpenData', scope='臺南市東區・預售屋買賣', excludedCancellations=len(cancelled), correctionNote='依交易日期統計，與成屋分開計算；排除已下載資料中標示解約的案件。同編號新資料覆蓋舊資料，尚未另接完整解約異動清單，後續解約可能尚未反映。近期月份會隨補登調整。', records=sorted(active, key=lambda r:(r['date'], r['id']), reverse=True))
+    result = dict(updatedAt=datetime.now().astimezone().isoformat(), market='presale', start=START.isoformat(), latestRelease=release, source=BASE+'DownloadOpenData', scope='臺南市東區・預售屋買賣', excludedCancellations=len(cancelled), correctionNote='依交易日期統計，與成屋分開計算；排除已下載資料中標示解約的案件。同編號新資料覆蓋舊資料，尚未另接完整解約異動清單，後續解約可能尚未反映。近期月份會隨補登調整。', records=sorted(active, key=lambda r:(r['date'], r['id']), reverse=True))
     for name, content in [('presale-data.json', json.dumps(result, ensure_ascii=False, separators=(',',':'))), ('presale-data.js', 'window.HOUSING_DATA='+json.dumps(result, ensure_ascii=False).replace('<','\\u003c')+';')]:
         tmp = PUBLIC/(name+'.tmp')
         tmp.write_text(content, encoding='utf-8')

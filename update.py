@@ -6,7 +6,7 @@ from urllib.request import Request, urlopen
 
 ROOT = Path(__file__).resolve().parent
 BASE = 'https://plvr.land.moi.gov.tw/'
-START = date(2026, 6, 1)
+START = date(2026, 1, 1)
 CACHE = ROOT / 'cache'
 PUBLIC = ROOT / 'public'
 
@@ -38,7 +38,7 @@ def parse(blob, release, market='sale'):
     for r in reader:
         if r['鄉鎮市區'] != '東區': continue
         dt = roc(r['交易年月日'])
-        if not dt or dt < (date(2026, 4, 1) if market == 'presale' else START) or dt > date.today(): continue
+        if not dt or dt < START or dt > date.today(): continue
         if '建物' not in r.get('交易標的', ''): continue
         area = number(r['建物移轉總面積平方公尺'])
         total = number(r['總價元'])
@@ -72,10 +72,10 @@ def main():
     CACHE.mkdir(exist_ok=True); PUBLIC.mkdir(exist_ok=True)
     history = fetch('DownloadHistory_ajax_list').decode('utf-8')
     releases = sorted(set(re.findall(r"downloadLast\('([0-9]{8})'\)", history)))
-    # 115S2 includes registrations through June 10, including early June trades.
-    sources = [('115S2', archive('DownloadHistory?type=season&fileName=115S2','115S2'))]
+    # Q1 and Q2 cover early 2026; recent releases continue the series.
+    sources = [(period, archive('DownloadHistory?type=season&fileName='+period, period)) for period in ('115S1', '115S2')]
     for release in releases:
-        if release >= '20260601':
+        if release >= '20260101':
             print('Import',release,flush=True)
             sources.append((release, archive('DownloadHistory?type=history&fileName='+release,release)))
     # Retain previously downloaded periods when they leave the official recent list.
@@ -92,7 +92,7 @@ def main():
     records = {}
     for release,blob in sorted(sources,key=lambda s:('0' if 'S' in s[0] else '1')+s[0]):
         for row in parse(blob,release): records[row['id']] = row
-    result = dict(updatedAt=datetime.now().astimezone().isoformat(), start='2026-06-01', latestRelease=current_release, source=BASE+'DownloadOpenData', scope='臺南市東區・成屋買賣', correctionNote='同編號新資料覆蓋舊資料；官方撤銷案件尚未自動核對。近期月份會隨補登調整。', records=sorted(records.values(), key=lambda r:(r['date'],r['id']),reverse=True))
+    result = dict(updatedAt=datetime.now().astimezone().isoformat(), start=START.isoformat(), latestRelease=current_release, source=BASE+'DownloadOpenData', scope='臺南市東區・成屋買賣', correctionNote='同編號新資料覆蓋舊資料；官方撤銷案件尚未自動核對。近期月份會隨補登調整。', records=sorted(records.values(), key=lambda r:(r['date'],r['id']),reverse=True))
     temp = PUBLIC/'data.json.tmp'
     temp.write_text(json.dumps(result,ensure_ascii=False,separators=(',',':')),encoding='utf-8')
     temp.replace(PUBLIC/'data.json')
