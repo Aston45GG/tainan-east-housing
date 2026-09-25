@@ -53,7 +53,7 @@ def parse(blob, release, market='sale'):
         serial = r['編號'].strip()
         transfer = r.get('移轉編號', '').strip()
         ident = serial + ':' + transfer if serial else hashlib.sha256(json.dumps(r, sort_keys=True).encode()).hexdigest()
-        rows.append(dict(id=ident, date=dt.isoformat(), month=dt.strftime('%Y-%m'), address=r.get('土地位置建物門牌',''), type=r.get('建物型態','其他'), use=r.get('主要用途',''), floor=r.get('移轉層次',''), age=age, area=round(area/3.305785,2), total=round(total/10000,2), unit=round(unit*3.305785/10000,2) if unit>0 else None, parkingPrice=round(park_price/10000,2), parkingArea=round(park_area/3.305785,2), parkingUnclear=has_park and not (park_area>0 and park_price>0), note=r.get('備註',''), release=release, project=r.get('建案名稱',''), unitName=r.get('棟及號',''), termination=r.get('解約情形','').strip()))
+        rows.append(dict(id=ident, date=dt.isoformat(), month=dt.strftime('%Y-%m'), address=r.get('土地位置建物門牌',''), type=r.get('建物型態','其他'), use=r.get('主要用途',''), floor=r.get('移轉層次',''), age=age, area=round(area/3.305785,2), total=round(total/10000,2), unit=round(unit*3.305785/10000,2) if unit>0 else None, parkingPrice=round(park_price/10000,2), parkingArea=round(park_area/3.305785,2), parkingUnclear=has_park and not (park_area>0 and park_price>0), note=r.get('備註',''), release=release, project={'國城?實':'國城寶實'}.get(r.get('建案名稱',''),r.get('建案名稱','')), unitName=r.get('棟及號',''), termination=r.get('解約情形','').strip()))
     return rows
 
 def archive(path, name):
