@@ -2,6 +2,7 @@ import json, unittest
 from pathlib import Path
 from datetime import date
 from update import roc, parse
+from update_xitun import parse_xitun
 
 class DataChecks(unittest.TestCase):
     def test_dates(self):
@@ -42,5 +43,17 @@ class DataChecks(unittest.TestCase):
         rows=parse(f.getvalue().encode('utf-8'),'test','presale')
         self.assertEqual([r['id'] for r in rows],['start:','cancel:'])
         self.assertEqual(rows[1]['termination'],'已解約')
+    def test_xitun_datasets(self):
+        for name, start, market in [('xitun-data.json','2025-11-01','sale'),('xitun-presale-data.json','2026-01-01','presale')]:
+            d=json.loads((Path(__file__).parent/'public'/name).read_text(encoding='utf-8'))
+            self.assertEqual(d['start'],start)
+            self.assertEqual(d['market'],market)
+            self.assertTrue(d['records'])
+            self.assertEqual(len(d['records']),len({r['id'] for r in d['records']}))
+            self.assertTrue(all(r['date'] >= start for r in d['records']))
+            self.assertEqual(d['scope'].split('・')[0],'臺中市西屯區')
+            self.assertTrue(any(r.get('marketArea') == '東海商圈' for r in d['records']))
+    def test_xitun_schema_guard(self):
+        with self.assertRaises(ValueError): parse_xitun(b'<html>error</html>','test','sale')
 
 if __name__=='__main__': unittest.main()

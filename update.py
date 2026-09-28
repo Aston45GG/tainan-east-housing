@@ -103,5 +103,7 @@ def main():
     print(json.dumps({'count':len(records),'latestRelease':current_release},ensure_ascii=False))
     from update_presale import main as update_presale
     update_presale()
+    from update_xitun import main as update_xitun
+    update_xitun()
 
 if __name__ == '__main__': main()

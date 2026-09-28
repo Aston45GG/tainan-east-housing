@@ -27,6 +27,12 @@ python test_data.py
 
 正式網站：https://aston45gg.github.io/tainan-east-housing/
 
+台中市西屯區成屋：https://aston45gg.github.io/tainan-east-housing/xitun.html
+
+台中市西屯區預售屋：https://aston45gg.github.io/tainan-east-housing/xitun-presale.html
+
+東海商圈建案分析：https://aston45gg.github.io/tainan-east-housing/donghai.html
+
 專案：https://github.com/Aston45GG/tainan-east-housing
 
 GitHub Pages 與 GitHub Actions 已啟用。每月 1、11、21 日台灣時間約 12:30 下載官方當期資料、檢查並發布；排程可能延遲。可在 Actions 手動執行 Update official data and publish。首次執行已於 2026-09-23 成功通過。
@@ -59,3 +65,7 @@ GitHub Pages 與 GitHub Actions 已啟用。每月 1、11、21 日台灣時間�
 ## 和宜大聚
 
 `public/daju.html` 使用內政部歷史買賣檔，以小東路 423 巷及官方建築完成日 2021-08-20 交叉比對。共 195 筆，其中 168 筆為預售／完工前交易，27 筆為成屋後交易；提供交易階段、門牌、房型、樓層、月份、車位與用途篩選，以及成屋後兩房／三房逐月價格圖。
+
+## 台中市西屯區與東海商圈
+
+`public/xitun.html` 收錄西屯區成屋，起始日為 2025-11-01；`public/xitun-presale.html` 收錄西屯區預售屋，起始日為 2026-01-01。兩頁與台南東區共用每月 1、11、21 日更新排程。`public/donghai.html` 直接引用西屯區兩類資料，依已確認的社區／建案名稱與鄰近道路標註東海商圈，提供月價、社區／建案比較與明細。
