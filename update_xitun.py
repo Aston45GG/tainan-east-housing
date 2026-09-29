@@ -24,10 +24,19 @@ def address_key(value):
 
 COMMUNITY_FILE = ROOT / 'xitun-community-map.json'
 COMMUNITY_BY_ADDRESS = json.loads(COMMUNITY_FILE.read_text(encoding='utf-8')) if COMMUNITY_FILE.exists() else {}
+COMMUNITY_ADDRESS_RULES = (
+    ('西屯區西屯路三段166之100號','太子雲世紀C區'),
+    ('西屯區工業區一路96之12號','總瑩愛瑪市'),
+    ('西屯區工業區一路96之22號','總瑩愛瑪市'),
+)
 
 def parking_count(value):
     match = re.search(r'車位\s*[:：]?\s*(\d+)', str(value or ''))
     return int(match.group(1)) if match else 0
+
+def room_count(value):
+    value=number(value)
+    return int(value) if value > 0 else None
 
 def is_east_sea(name, address, market):
     return name in EAST_SEA_NAMES or (market == 'sale' and any(word in address for word in EAST_SEA_ADDRESS_WORDS))
@@ -61,7 +70,11 @@ def parse_xitun(blob, release, market):
         community=(r.get('社區名稱','') or r.get('社區簡稱','') or '').strip()
         name=project if market == 'presale' else community
         address=(r.get('土地位置建物門牌','') or '').strip()
-        if market == 'sale' and not community: community=COMMUNITY_BY_ADDRESS.get(address_key(address),'')
+        if market == 'sale' and not community:
+            key=address_key(address)
+            community=COMMUNITY_BY_ADDRESS.get(key,'')
+            if not community:
+                community=next((name for prefix,name in COMMUNITY_ADDRESS_RULES if prefix in key),'')
         name=project if market == 'presale' else community
         serial=(r.get('編號','') or '').strip(); transfer=(r.get('移轉編號','') or '').strip()
         ident=serial+':'+transfer if serial else hashlib.sha256(json.dumps(r,sort_keys=True,ensure_ascii=False).encode()).hexdigest()
@@ -73,6 +86,8 @@ def parse_xitun(blob, release, market):
             parkingPrice=round(park_price/10000,2),parkingArea=round(park_area/3.305785,2),
             parkingCount=parks,parkingUnclear=parks>0 and not (park_area>0 and park_price>0),
             note=r.get('備註',''),release=release,project=name,
+            rooms=room_count(r.get('建物現況格局-房')),layout='{}房{}廳{}衛'.format(
+                int(number(r.get('建物現況格局-房'))),int(number(r.get('建物現況格局-廳'))),int(number(r.get('建物現況格局-衛')))),
             unitName=(r.get('棟及號','') or '').strip(),termination=(r.get('解約情形','') or '').strip(),
             marketArea='東海商圈' if is_east_sea(name,address,market) else ''
         ))

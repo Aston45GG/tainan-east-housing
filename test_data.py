@@ -53,6 +53,8 @@ class DataChecks(unittest.TestCase):
             self.assertTrue(all(r['date'] >= start for r in d['records']))
             self.assertEqual(d['scope'].split('・')[0],'臺中市西屯區')
             self.assertTrue(any(r.get('marketArea') == '東海商圈' for r in d['records']))
+            self.assertTrue(all('rooms' in r for r in d['records']))
+            self.assertTrue(any(r.get('rooms') in (2,3) for r in d['records']))
     def test_xitun_schema_guard(self):
         with self.assertRaises(ValueError): parse_xitun(b'<html>error</html>','test','sale')
 
