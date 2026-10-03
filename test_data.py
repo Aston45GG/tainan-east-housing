@@ -83,4 +83,12 @@ class DataChecks(unittest.TestCase):
                'layout':''}
         self.assertEqual(record_key(named),record_key(plain))
 
+    def test_yongkang_presale_duplicate_floor_formats(self):
+        base=dict(market='presale',date='2026-08-08',project='富凰琢青',unitName='B棟2號',
+                  total=1550,area=41.9,layout='3房2廳2衛')
+        history={**base,'address':'永康區永埔街及埔聖街交叉路口','floor':'8/14'}
+        current={**base,'address':'臺南市永康區永埔街及埔聖街交叉路口','floor':'八層',
+                 'layout':''}
+        self.assertEqual(record_key(history),record_key(current))
+
 if __name__=='__main__': unittest.main()
