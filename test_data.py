@@ -3,7 +3,7 @@ from pathlib import Path
 from datetime import date
 from update import roc, parse
 from update_xitun import parse_xitun
-from update_yongkang import parse_yongkang
+from update_yongkang import parse_yongkang, record_key
 
 class DataChecks(unittest.TestCase):
     def test_dates(self):
@@ -74,5 +74,12 @@ class DataChecks(unittest.TestCase):
 
     def test_yongkang_schema_guard(self):
         with self.assertRaises(ValueError): parse_yongkang(b'<html>error</html>','test','sale')
+
+    def test_yongkang_duplicate_address_formats(self):
+        base=dict(market='sale',date='2026-08-05',total=1580,area=52.1,
+                  layout='3房2廳2衛',unitName='',project='深耕8')
+        named={**base,'address':'永康區仁愛街５３巷２１號十樓之１','floor':'十層/十五層'}
+        plain={**base,'address':'臺南市永康區仁愛街５３巷２１號十樓之１','floor':'十層'}
+        self.assertEqual(record_key(named),record_key(plain))
 
 if __name__=='__main__': unittest.main()

@@ -17,11 +17,33 @@ def cache_directory(market):
     return CACHE if market == "sale" else CACHE / "presale"
 
 
+def normalized_address(value):
+    value = re.sub(r"[\s　]", "", str(value or ""))
+    value = re.sub(r"^(?:臺南市|台南市)?永康區", "", value)
+    return value.replace("臺", "台")
+
+
+def transferred_floor(value):
+    return re.split(r"[/／]", str(value or ""), maxsplit=1)[0].replace("，", ",").strip()
+
+
 def record_key(record):
+    market = record.get("market", "sale")
     return (
-        record["date"], record["address"], record.get("project", ""), record.get("unitName", ""),
-        record["total"], record.get("unit"), record["area"], record.get("floor", ""), record.get("layout", ""),
+        record["date"], normalized_address(record["address"]),
+        round(number(record["total"]), 2), round(number(record["area"]), 2),
+        transferred_floor(record.get("floor", "")), record.get("layout", ""),
+        record.get("unitName", "") if market == "presale" else "",
     )
+
+
+def merge_record(previous, current):
+    """Keep current official values while retaining richer community labels."""
+    merged = dict(current)
+    for field in ("project", "unitName", "note"):
+        if not merged.get(field) and previous.get(field):
+            merged[field] = previous[field]
+    return merged
 
 
 def parse_yongkang(blob, release, market="sale"):
@@ -58,6 +80,7 @@ def parse_yongkang(blob, release, market="sale"):
         baths = int(number(row.get("建物現況格局-衛"))) if number(row.get("建物現況格局-衛")) else None
         layout = "" if rooms is None else f"{rooms}房{halls or 0}廳{baths or 0}衛"
         records.append(dict(
+            market=market,
             id=ident, date=traded.isoformat(), month=traded.strftime("%Y-%m"),
             address=row.get("土地位置建物門牌", ""), type=row.get("建物型態", "其他"),
             use=row.get("主要用途", ""), floor=row.get("移轉層次", ""), age=age,
@@ -142,10 +165,13 @@ def save_market(market, output_name, scope, download_name):
     if existing_path.exists():
         existing = json.loads(existing_path.read_text(encoding="utf-8"))
         for record in existing.get("records", []):
-            records[record_key(record)] = record
+            record.setdefault("market", market)
+            key = record_key(record)
+            records[key] = merge_record(records[key], record) if key in records else record
     for source, blob in sorted(sources, key=lambda item: ("0" if "S" in item[0] else "1") + item[0]):
         for record in parse_yongkang(blob, source, market):
-            records[record_key(record)] = record
+            key = record_key(record)
+            records[key] = merge_record(records[key], record) if key in records else record
     cancelled = [record for record in records.values() if record["termination"]]
     active = [record for record in records.values() if not record["termination"]]
     result = dict(
