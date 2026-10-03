@@ -105,5 +105,7 @@ def main():
     update_presale()
     from update_xitun import main as update_xitun
     update_xitun()
+    from update_yongkang import main as update_yongkang
+    update_yongkang()
 
 if __name__ == '__main__': main()

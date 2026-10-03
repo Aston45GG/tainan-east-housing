@@ -3,6 +3,7 @@ from pathlib import Path
 from datetime import date
 from update import roc, parse
 from update_xitun import parse_xitun
+from update_yongkang import parse_yongkang
 
 class DataChecks(unittest.TestCase):
     def test_dates(self):
@@ -57,5 +58,21 @@ class DataChecks(unittest.TestCase):
             self.assertTrue(any(r.get('rooms') in (2,3) for r in d['records']))
     def test_xitun_schema_guard(self):
         with self.assertRaises(ValueError): parse_xitun(b'<html>error</html>','test','sale')
+
+    def test_yongkang_datasets(self):
+        for name, start, market in [('yongkang-data.json','2024-12-01','sale'),('yongkang-presale-data.json','2024-10-01','presale')]:
+            d=json.loads((Path(__file__).parent/'public'/name).read_text(encoding='utf-8'))
+            self.assertEqual(d['start'],start)
+            self.assertEqual(d['market'],market)
+            self.assertTrue(d['records'])
+            self.assertEqual(len(d['records']),len({r['id'] for r in d['records']}))
+            self.assertTrue(all(r['date'] >= start for r in d['records']))
+            self.assertEqual(d['scope'].split('・')[0],'臺南市永康區')
+            self.assertTrue(all('rooms' in r for r in d['records']))
+            self.assertTrue(any(r.get('rooms') in (2,3) for r in d['records']))
+            if market == 'presale': self.assertTrue(all(not r['termination'] for r in d['records']))
+
+    def test_yongkang_schema_guard(self):
+        with self.assertRaises(ValueError): parse_yongkang(b'<html>error</html>','test','sale')
 
 if __name__=='__main__': unittest.main()
