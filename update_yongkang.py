@@ -29,12 +29,14 @@ def transferred_floor(value):
 
 def record_key(record):
     market = record.get("market", "sale")
-    return (
+    common = (
         record["date"], normalized_address(record["address"]),
         round(number(record["total"]), 2), round(number(record["area"]), 2),
-        transferred_floor(record.get("floor", "")), record.get("layout", ""),
-        record.get("unitName", "") if market == "presale" else "",
+        transferred_floor(record.get("floor", "")),
     )
+    if market == "presale":
+        return common + (record.get("unitName", ""), record.get("layout", ""))
+    return common
 
 
 def merge_record(previous, current):
